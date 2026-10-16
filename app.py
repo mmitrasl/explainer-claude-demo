@@ -3,22 +3,22 @@ import streamlit as st
 
 st.set_page_config(page_title="Clarify Technical Complexity", page_icon="💡")
 
-st.title("💡 Explain it to...")
+st.title("💡 Monty's Technical Explainer")
 st.write("Your thinking is only as good as it is understandable to your audience.")
 
 # Each audience gets its own communication guidance.
 audiences = {
     "Engineer": (
-        "Explain the mechanism, technical implications, and tradeoffs. "
-        "Retain useful technical terminology."
+        "Explain the mechanism, technical implications, and design tradeoffs. "
+        "Eplain how this information can impact an engineer's processes and workflows."
     ),
     "Salesperson": (
         "Articulate customer problems, practical benefits, and discovery questions. "
-        "Focus on the customer."
+        "Focus on the customer and why they may want to pay for this. What else might you add to increase a cusotmer's interest?"
     ),
     "Executive": (
         "Focus on business impact, risks, tradeoffs, and decisions. "
-        "Be concise and avoid unnecessary jargon."
+        "Be concise and avoid unnecessary jargon. The focus is on the decision. Anything that doesn't drive a decision should be eliminated? Consider the elevator pitch format."
     ),
     "ELI5": (
         "Use everyday language and a playful, concrete analogy. "
@@ -29,7 +29,7 @@ audiences = {
 # A form prevents an API call when someone merely changes the dropdown.
 with st.form("explanation_form"):
     source_text = st.text_area(
-        "Paste in your technical thinking",
+        "Paste in your technical concept or thinking.",
         height=200,
         max_chars=12000,
         placeholder="Try a paragraph about APIs, encryption, or machine learning...",
@@ -66,7 +66,7 @@ Return Markdown with these two headings:
 Write an explanation of no more than 200 words.
 
 ## How this was tailored
-Briefly explain two communication choices you made for this audience.
+Briefly explain two communication choices you made for this audience and why those choices fits their needs.
 """
 
         try:
