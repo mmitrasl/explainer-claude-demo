@@ -18,7 +18,7 @@ audiences = {
     ),
     "Executive": (
         "Focus on business impact, risks, tradeoffs, and decisions. "
-        "Be concise and avoid unnecessary jargon. The focus is on the decision. Anything that doesn't drive a decision should be eliminated? Consider the elevator pitch format."
+        "Be concise and avoid unnecessary jargon. The focus is on the decision. Anything that doesn't drive a decision should be eliminated. Consider the elevator pitch format."
     ),
     "ELI5": (
         "Use everyday language and a playful, concrete analogy. "
@@ -26,13 +26,99 @@ audiences = {
     ),
 }
 
-# A form prevents an API call when someone merely changes the dropdown.
+if "source_text" not in st.session_state:
+    st.session_state.source_text = ""
+
+label_column, button_column = st.columns([3, 2])
+
+with label_column:
+    st.markdown("**Paste something technical**")
+
+with button_column:
+    generate = st.button("🎲 Surprise me", use_container_width=True)
+
+if generate:
+    if "ANTHROPIC_API_KEY" not in st.secrets:
+        st.error("Add ANTHROPIC_API_KEY to Streamlit Secrets first.")
+    else:
+        # Randomize the topic area to encourage varied examples.
+        topic_area = random.choice([
+            "networking and the internet",
+            "databases and data storage",
+            "cybersecurity and encryption",
+            "artificial intelligence",
+            "software engineering",
+            "cloud computing",
+            "computer hardware",
+            "audio and digital imaging",
+        ])
+
+        try:
+            with st.spinner("Finding something technical..."):
+                client = anthropic.Anthropic(
+                    api_key=st.secrets["ANTHROPIC_API_KEY"],
+                    timeout=45.0,
+                    max_retries=1,
+                )
+
+                response = client.messages.create(
+                    model="claude-sonnet-5-5",
+                    max_tokens=600,
+                    thinking={"type": "between_tools"},
+                    system=(
+                        "Write accurate technical source material for an "
+                        "audience-adaptation exercise. Return only one "
+                        "self-contained paragraph of 80–120 words. "
+                        "Describe a specific concept: what it is, how it "
+                        "works, and an important tradeoff or limitation. "
+                        "Use natural technical terminology. Do not simplify "
+                        "for a particular audience or include a preamble."
+                    ),
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": (
+                                f"Choose a technical concept within {topic_area}. "
+                                "Write a short passage about it. Choose something "
+                                "different from the previous passage if possible.\n\n"
+                                "Previous passage:\n"
+                                + st.session_state.source_text[:2000]
+                            ),
+                        }
+                    ],
+                )
+
+                passage = "\n\n".join(
+                    block.text
+                    for block in response.content
+                    if block.type == "text"
+                ).strip()
+
+                if passage and response.stop_reason != "max_tokens":
+                    st.session_state.source_text = passage
+                else:
+                    st.warning("Generation was incomplete. Please try again.")
+
+        except anthropic.AuthenticationError:
+            st.error("The API key wasn't accepted. Check Streamlit Secrets.")
+        except anthropic.RateLimitError:
+            st.error("Rate limit reached. Try again shortly.")
+        except anthropic.APIConnectionError:
+            st.error("Couldn't connect to Claude. Please try again.")
+        except anthropic.APIStatusError:
+            st.error(
+                "Couldn't generate a passage. "
+                "Check your Console balance and model access."
+            )
+
 with st.form("explanation_form"):
     source_text = st.text_area(
-        "Paste in your technical concept or thinking.",
+        "Paste something technical",
+        key="source_text",
         height=200,
         max_chars=12000,
-        placeholder="Try a paragraph about APIs, encryption, or machine learning...",
+        label_visibility="collapsed",
+        placeholder="Paste your own passage or click Surprise me...",
     )
 
     audience = st.selectbox("Explain it to an...", list(audiences))
@@ -106,10 +192,6 @@ Briefly explain two communication choices you made for this audience and why tho
                 st.write(f"Model: {response.model}")
                 st.write(f"Input tokens: {response.usage.input_tokens}")
                 st.write(f"Output tokens: {response.usage.output_tokens}")
-                st.caption(
-                    "The app sends your text and audience instructions "
-                    "to Claude in one API request."
-                )
 
         except anthropic.AuthenticationError:
             st.error("The API key wasn't accepted. Check Streamlit Secrets.")
