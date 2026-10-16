@@ -5,7 +5,7 @@ import streamlit as st
 st.set_page_config(page_title="Clarify Technical Complexity", page_icon="💡")
 
 st.title("💡 Monty's Technical Explainer")
-st.write("Your thinking is only as good as it is understandable to your audience.")
+st.write("Your thinking is only as good as how well your audience understands it.")
 
 # Each audience gets its own communication guidance.
 audiences = {
